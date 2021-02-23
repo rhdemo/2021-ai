@@ -1,3 +1,5 @@
+import numpy as np
+
 BOARD_SIZE = 5
 SHIP = 0
 MISS = 1
@@ -131,12 +133,19 @@ def getProbs(bState):
 
 
 def predict(bState):
+    #print(bState)
+    mat = np.array(bState)
+    mat = mat.transpose()
+    bState = mat.tolist()
     print(bState)
     newProbs = getProbs(bState)
     pos = getAttackPos(bState, newProbs)
     x = pos[0]
     y = pos[1]
-    return {"x": x, "y": y, "prob": newProbs}
+    res = {"x": y, "y": x, "prob": newProbs}
+    print(res)
+    print("---")
+    return res
 
 
 if __name__ == "__main__":

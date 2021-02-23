@@ -30,6 +30,11 @@ bataai   bataai-test.apps.rhods-internal.openshiftapps.com          bataai     8
 {"prob":[[8,11,12,11,8],[11,14,15,14,11],[12,15,16,15,12],[11,14,15,14,11],[8,11,12,11,8]],"x":2,"y":2}
 ```
 
+## Update code 
+```
+▶ oc start-build bataai
+```
+
 ## Cleanup 
 ```
 ▶ oc delete all -l name=bataai
