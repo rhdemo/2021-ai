@@ -15,6 +15,9 @@ def status():
 
 @application.route('/prediction', methods=['POST'])
 def object_detection():
-    data = request.data or '{}'
-    body = json.loads(data)
-    return jsonify(predict(body))
+    data = request.json
+    # data = json.dumps(data)
+    # body = json.loads(data)
+    print(data)
+    bState = data['board_state']
+    return jsonify(predict(bState))
