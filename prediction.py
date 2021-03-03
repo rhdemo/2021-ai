@@ -1,14 +1,39 @@
 import numpy as np
+from numpy.random import random, randint
 
 BOARD_SIZE = 5
 SHIP = 0
 MISS = 1
 HIT = 2
 SHIPS_SIZE = [5, 4, 3, 2]
+SHIPS = {'carrier': 5, 'battleship': 4, 'destroyer': 3, 'submarine': 2}
 HITS_SKEW_PROBS = True
 BOARD_STATE = [[-1 for x in range(5)] for x in range(5)]
 boardProbabilities = [[0 for x in range(5)] for x in range(5)]
 SKEW = 2
+
+
+def isValidPosition(x, y, ship_size, vertical, obstacles):
+    if ship_size not in SHIPS_SIZE:
+        return True
+    if not vertical and y + ship_size > BOARD_SIZE:
+        return True
+    if vertical and x + ship_size > BOARD_SIZE:
+        return True
+
+    for j in range(ship_size):
+        index = getNextCell(x, y, j, vertical)
+        if index in obstacles:
+            return True
+
+
+def getNextCell(x, y, offset, vertical):
+    if vertical:
+        x += offset
+    else:
+        y += offset
+    return [x,y] #(y * 5) + x
+
 
 def getSurroundingPos(pos):
     x = pos[0]
@@ -86,6 +111,21 @@ def getAttackPos(bState, bProbs):
                 bestProb = bProbs[x][y]
                 bestPos = [x, y]
 
+    mat = np.array(bState)
+    max_value = np.max(mat)
+    if max_value == -1:
+        value = randint(0, 5)
+        if value == 1:
+            bestPos = [2, 0]
+        elif value == 2:
+            bestPos = [4, 2]
+        elif value == 3:
+            bestPos = [0, 2]
+        elif value == 4:
+            bestPos = [2, 4]
+        else:
+            bestPos = [x, y]
+
     return bestPos
 
 
@@ -108,7 +148,38 @@ def skewProbabilityAroundHits(toSkew, probs):
     return probs
 
 
-def getProbs(bState):
+def getProbs(bState, ship_locs):
+    bProbs = [[0 for x in range(5)] for x in range(5)]
+    remaining_ships_list = get_unsunkShips(ship_locs)
+    sunk_cells = get_sunkCells(ship_locs)
+    obstacle_cells = get_obstacles(bState, sunk_cells)
+    hit_cells = get_hitCells(bState, sunk_cells)
+
+    for i in range(0, len(remaining_ships_list)):
+        for y in range(BOARD_SIZE):
+            for x in range(BOARD_SIZE):
+                for direction in [True, False]:
+                    ship_size = SHIPS[remaining_ships_list[i]]
+                    if not isValidPosition(x, y, ship_size, direction, obstacle_cells):
+                        hit_seen = 0
+                        for j in range(ship_size):
+                            pos = getNextCell(x, y, j, direction)
+                            bProbs[pos[0]][pos[1]] += 1
+                            if pos in hit_cells:
+                                hit_seen += 1
+
+                        if hit_seen:
+                            for j in range(ship_size):
+                                pos = getNextCell(x, y, j, direction)
+                                bProbs[pos[0]][pos[1]] += 5 * hit_seen
+
+    for p in hit_cells:
+        bProbs[p[0]][p[1]] = 0
+
+    return bProbs
+
+
+def getProbs1(bState):
     hits = []
     bProbs = [[0 for x in range(5)] for x in range(5)]
     for y in range(BOARD_SIZE):
@@ -131,14 +202,68 @@ def getProbs(bState):
 
     return bProbs
 
+def get_obstacles(bState, sunk_cells):
+    cells = []
+    for y in range(BOARD_SIZE):
+        for x in range(BOARD_SIZE):
+            if [x,y] in sunk_cells or bState[x][y] == MISS:
+                cells.append([x,y])
+    return cells
 
-def predict(bState):
+def get_hitCells(bState, sunk_cells):
+    cells = []
+    for y in range(BOARD_SIZE):
+        for x in range(BOARD_SIZE):
+            if [x,y] not in sunk_cells and bState[x][y] == HIT:
+                cells.append([x,y])
+    return cells
+
+def get_sunkCells(ship_loc):
+    cells = []
+    for key in ship_loc:
+        for v in ship_loc[key]:
+            cells.append(v)
+    return cells
+
+def get_unsunkShips(ship_loc):
+    unsunk_ships = []
+    if ship_loc:
+        for key in ship_loc:
+            for x in SHIPS.keys():
+                if x != key:
+                    unsunk_ships.append(x)
+    else:
+        unsunk_ships = list(SHIPS.keys())
+    return unsunk_ships
+
+def swapxy(l):
+    fl = []
+    for x in l:
+        fl.append([x[1], x[0]])
+    return fl
+
+def get_sunkShips(bShips):
+    ship_loc = {}
+    for x in bShips:
+        stype = ''
+        loc = []
+        for key in x:
+            if key == "type":
+                stype = x[key]
+            if key == "cells":
+                loc = swapxy(x[key])
+        ship_loc[stype.lower()] = loc
+    return ship_loc
+
+
+def predict1(data):
     #print(bState)
+    bState = data['board_state']
     mat = np.array(bState)
     mat = mat.transpose()
     bState = mat.tolist()
     print(bState)
-    newProbs = getProbs(bState)
+    newProbs = getProbs1(bState)
     pos = getAttackPos(bState, newProbs)
     x = pos[0]
     y = pos[1]
@@ -148,8 +273,40 @@ def predict(bState):
     return res
 
 
+def predict(data):
+    #print(bState)
+    bState = data['board_state']
+    bShips = data['ship_types']
+    ship_loc = get_sunkShips(bShips)
+    mat = np.array(bState)
+    mat = mat.transpose()
+    bState = mat.tolist()
+    print(bState)
+    newProbs = getProbs(bState, ship_loc)
+    pos = getAttackPos(bState, newProbs)
+    x = pos[0]
+    y = pos[1]
+    res = {"x": y, "y": x, "prob": newProbs}
+    print(res)
+    print("-----")
+    return res
+
+
 if __name__ == "__main__":
     BOARD_STATE[2][2] = MISS
-    res = predict(BOARD_STATE)
+    data1 = {
+        'board_state': BOARD_STATE
+    }
+    data = {'board_state': [[-1, 1, -1, -1, -1], [1, 2, -1, -1, -1], [-1, 2, 1, -1, -1], [-1, -1, -1, 1, -1],
+                     [-1, -1, -1, -1, -1]], 'ship_types': [{'type': 'Destroyer', 'cells': [[1, 1], [2, 1]]}]}
+    #take from pod logs
+    data = {'board_state': [[-1, -1, 1, 2, -1], [-1, 1, -1, 2, 2], [-1, -1, 1, 2, -1], [-1, -1, 1, 2, 2], [-1, -1, -1, 2, -1]],
+            'ship_types': [{'type': 'Carrier', 'cells': [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3]]}]}
+    data = {'board_state': [[-1, -1, 1, 2, -1], [-1, 1, -1, 2, 2], [-1, -1, 1, 2, 2], [-1, -1, 1, 2, 2], [-1, -1, -1, 2, -1]],
+            'ship_types': [{'type': 'Carrier', 'cells': [[0, 3], [1, 3], [2, 3], [3, 3], [4, 3]]}]}
+    ##
+    data = {'board_state': [[-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1], [-1, -1, -1, -1, -1],
+                     [-1, -1, -1, -1, -1]], 'ship_types': []}
+    res = predict(data)
     print(res)
     print("done")

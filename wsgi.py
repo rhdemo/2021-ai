@@ -3,7 +3,7 @@
 # This can be overridden with the environment variable APP_MODULE.
 import json
 from flask import Flask, jsonify, request
-from prediction import predict
+from prediction import predict, predict1
 
 application = Flask(__name__)
 
@@ -12,6 +12,16 @@ application = Flask(__name__)
 def status():
     return jsonify({'status': 'ok'})
 
+# The older model
+# doesn't use ship_locations
+@application.route('/prediction1', methods=['POST'])
+def object_detection1():
+    data = request.json
+    # data = json.dumps(data)
+    # body = json.loads(data)
+    print(data)
+    # bState = data['board_state']
+    return jsonify(predict1(data))
 
 @application.route('/prediction', methods=['POST'])
 def object_detection():
@@ -19,5 +29,5 @@ def object_detection():
     # data = json.dumps(data)
     # body = json.loads(data)
     print(data)
-    bState = data['board_state']
-    return jsonify(predict(bState))
+    # bState = data['board_state']
+    return jsonify(predict(data))
