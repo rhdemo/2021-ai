@@ -281,7 +281,6 @@ def predict1(data):
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}
     print(res)
-    print("---")
     return res
 
 #uses ship locations
@@ -301,7 +300,6 @@ def predict2(data):
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}
     print(res)
-    print("-----")
     return res
 
 
@@ -320,7 +318,6 @@ def predict(data):
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}
     print(res)
-    print("-----")
     return res
 
 
