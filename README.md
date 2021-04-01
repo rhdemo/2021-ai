@@ -1,5 +1,29 @@
 # 2021-ai
 
+## Create model Image  
+```
+make build
+make push
+```
+
+## Deployment  
+```
+oc create -f https://raw.githubusercontent.com/rhdemo/2021-ai/master/install/deployment.yml
+oc new-app --template=demo-2021-ai
+```
+
+## cleanup
+```
+oc delete template demo-2021-ai
+oc delete all -l app=demo-2021-ai
+oc delete route demo-2021-ai
+```
+
+
+--
+
+
+
 ## Deploy 
 ```
 ▶ oc new-app https://github.com/rhdemo/2021-ai.git -l name=demo-2021-ai --name=demo-2021-ai
