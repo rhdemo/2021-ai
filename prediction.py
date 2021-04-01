@@ -102,7 +102,7 @@ def isPositionUnPlayed(bState, x, y):
         return False
 
 
-def getAttackPos(bState, bProbs):
+def getAttackPos3(bState, bProbs):
     bestProb = 0
     bestPos = []
     for x in range(BOARD_SIZE):
@@ -128,7 +128,34 @@ def getAttackPos(bState, bProbs):
 
     return bestPos
 
+
 def getAttackPos2(bState, bProbs):
+    bestProb = 0
+    bestPos = []
+    for x in range(BOARD_SIZE):
+        for y in range(BOARD_SIZE):
+            if isPositionUnPlayed(bState, x, y) and bProbs[x][y] > bestProb:
+                bestProb = bProbs[x][y]
+                bestPos = [x, y]
+
+    mat = np.array(bState)
+    max_value = np.max(mat)
+    if max_value == -1:
+        value = randint(0, 5)
+        if value == 1:
+            bestPos = [2, 0]
+        elif value == 2:
+            bestPos = [4, 2]
+        elif value == 3:
+            bestPos = [0, 2]
+        elif value == 4:
+            bestPos = [2, 4]
+        else:
+            bestPos = [x, y]
+
+    return bestPos
+
+def getAttackPos1(bState, bProbs):
     bestProb = 0
     bestPos = []
     for x in range(BOARD_SIZE):
@@ -160,7 +187,7 @@ def skewProbabilityAroundHits(toSkew, probs):
     return probs
 
 
-def getProbs(bState, ship_locs):
+def getProbs2(bState, ship_locs):
     bProbs = [[0 for x in range(5)] for x in range(5)]
     remaining_ships_list = get_unsunkShips(ship_locs)
     sunk_cells = get_sunkCells(ship_locs)
@@ -276,7 +303,7 @@ def predict1(data):
     bState = mat.tolist()
     print(bState)
     newProbs = getProbs1(bState)
-    pos = getAttackPos(bState, newProbs)
+    pos = getAttackPos1(bState, newProbs)
     x = pos[0]
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}
@@ -294,7 +321,27 @@ def predict2(data):
     mat = mat.transpose()
     bState = mat.tolist()
     print(bState)
-    newProbs = getProbs(bState, ship_loc)
+    newProbs = getProbs2(bState, ship_loc)
+    pos = getAttackPos1(bState, newProbs)
+    x = pos[0]
+    y = pos[1]
+    res = {"x": y, "y": x, "prob": newProbs}
+    print(res)
+    return res
+
+
+#uses ship locations
+#attacks center + random
+def predict3(data):
+    #print(bState)
+    bState = data['board_state']
+    bShips = data['ship_types']
+    ship_loc = get_sunkShips(bShips)
+    mat = np.array(bState)
+    mat = mat.transpose()
+    bState = mat.tolist()
+    print(bState)
+    newProbs = getProbs2(bState, ship_loc)
     pos = getAttackPos2(bState, newProbs)
     x = pos[0]
     y = pos[1]
@@ -312,8 +359,8 @@ def predict(data):
     mat = mat.transpose()
     bState = mat.tolist()
     print(bState)
-    newProbs = getProbs(bState, ship_loc)
-    pos = getAttackPos(bState, newProbs)
+    newProbs = getProbs2(bState, ship_loc)
+    pos = getAttackPos3(bState, newProbs)
     x = pos[0]
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}

@@ -3,7 +3,7 @@
 # This can be overridden with the environment variable APP_MODULE.
 import json
 from flask import Flask, jsonify, request
-from prediction import predict, predict1
+from prediction import predict, predict1, predict2, predict3
 from functools import wraps
 from time import time
 application = Flask(__name__)
@@ -25,8 +25,10 @@ def timing(f):
 def status():
     return jsonify({'status': 'ok'})
 
+# v3
 # The older model
 # doesn't use ship_locations
+# attacks center
 @application.route('/prediction1', methods=['POST'])
 @timing
 def object_detection1():
@@ -44,9 +46,9 @@ def object_detection1():
         return jsonify([])
 
 
-# v5
+# v4
 # use ship_locations
-#attacks center
+# attacks center
 @application.route('/prediction2', methods=['POST'])
 @timing
 def object_detection2():
@@ -57,15 +59,36 @@ def object_detection2():
     try:
         print(data)
         # bState = data['board_state']
-        res = jsonify(predict1(data))
+        res = jsonify(predict2(data))
         return res
     except:
         print('ERROR!!!')
         return jsonify([])
 
+
 # v5
 # use ship_locations
-#attacks random center or middle side rows
+# attacks center+random
+@application.route('/prediction3', methods=['POST'])
+@timing
+def object_detection3():
+    data = request.json
+    # data = json.dumps(data)
+    # body = json.loads(data)
+    res = []
+    try:
+        print(data)
+        # bState = data['board_state']
+        res = jsonify(predict3(data))
+        return res
+    except:
+        print('ERROR!!!')
+        return jsonify([])
+
+
+# v6
+# use ship_locations
+# attacks based on previous probs
 @application.route('/prediction', methods=['POST'])
 @timing
 def object_detection():
@@ -76,7 +99,7 @@ def object_detection():
     try:
         print(data)
         # bState = data['board_state']
-        res = jsonify(predict(data))
+        res = jsonify(predict2(data))
         return res
     except:
         print('ERROR!!!')
