@@ -128,6 +128,18 @@ def getAttackPos(bState, bProbs):
 
     return bestPos
 
+def getAttackPos2(bState, bProbs):
+    bestProb = 0
+    bestPos = []
+    for x in range(BOARD_SIZE):
+        for y in range(BOARD_SIZE):
+            if isPositionUnPlayed(bState, x, y) and bProbs[x][y] > bestProb:
+                bestProb = bProbs[x][y]
+                bestPos = [x, y]
+
+    mat = np.array(bState)
+    return bestPos
+
 
 def skewProbabilityAroundHits(toSkew, probs):
     uniques = []
@@ -255,7 +267,7 @@ def get_sunkShips(bShips):
         ship_loc[stype.lower()] = loc
     return ship_loc
 
-
+#doesn't use ship locations
 def predict1(data):
     #print(bState)
     bState = data['board_state']
@@ -270,6 +282,26 @@ def predict1(data):
     res = {"x": y, "y": x, "prob": newProbs}
     print(res)
     print("---")
+    return res
+
+#uses ship locations
+#attacks center
+def predict2(data):
+    #print(bState)
+    bState = data['board_state']
+    bShips = data['ship_types']
+    ship_loc = get_sunkShips(bShips)
+    mat = np.array(bState)
+    mat = mat.transpose()
+    bState = mat.tolist()
+    print(bState)
+    newProbs = getProbs(bState, ship_loc)
+    pos = getAttackPos2(bState, newProbs)
+    x = pos[0]
+    y = pos[1]
+    res = {"x": y, "y": x, "prob": newProbs}
+    print(res)
+    print("-----")
     return res
 
 
