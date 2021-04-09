@@ -41,8 +41,8 @@ def object_detection1():
         # bState = data['board_state']
         res = jsonify(predict1(data))
         return res
-    except:
-        print('ERROR!!!')
+    except Exception as e:
+        print('ERROR!!!', e)
         return jsonify([])
 
 
@@ -61,8 +61,8 @@ def object_detection2():
         # bState = data['board_state']
         res = jsonify(predict2(data))
         return res
-    except:
-        print('ERROR!!!')
+    except Exception as e:
+        print('ERROR!!!', e)
         return jsonify([])
 
 
@@ -81,16 +81,15 @@ def object_detection3():
         # bState = data['board_state']
         res = jsonify(predict3(data))
         return res
-    except:
-        print('ERROR!!!')
+    except Exception as e:
+        print('ERROR!!!', e)
         return jsonify([])
 
 
 # v6
 # use ship_locations
-# attacks based on previous probs
+# attacks based on previous probs then center
 @application.route('/prediction', methods=['POST'])
-@timing
 def object_detection():
     data = request.json
     # data = json.dumps(data)
@@ -99,8 +98,9 @@ def object_detection():
     try:
         print(data)
         # bState = data['board_state']
-        res = jsonify(predict2(data))
-        return res
-    except:
-        print('ERROR!!!')
+        res = predict(data)
+        res1 = jsonify(res)
+        return res1
+    except Exception as e:
+        print('ERROR!!!', e)
         return jsonify([])

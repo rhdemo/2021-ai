@@ -11,7 +11,11 @@ HITS_SKEW_PROBS = True
 BOARD_STATE = [[-1 for x in range(5)] for x in range(5)]
 boardProbabilities = [[0 for x in range(5)] for x in range(5)]
 SKEW = 2
-
+TRAINING_INFO = [[0.88607595, 0.93670886, 0.83544304, 0.93670886, 0.89873418],
+ [0.98734177, 0.96202532, 1.0,         0.98734177, 0.96202532],
+ [0.98734177, 0.93670886, 0.94936709, 0.93670886, 0.89873418],
+ [0.7721519,  0.69620253, 0.78481013, 0.83544304, 0.89873418],
+ [0.88607595, 0.94936709, 0.88607595, 0.98734177, 0.88607595]]
 
 def isValidPosition(x, y, ship_size, vertical, obstacles):
     if ship_size not in SHIPS_SIZE:
@@ -125,6 +129,29 @@ def getAttackPos3(bState, bProbs):
             bestPos = [2, 4]
         else:
             bestPos = [x, y]
+
+    return bestPos
+
+
+def getAttackPos4(bState, bProbs):
+    bestProb = 0
+    bestPos = []
+
+    mat = np.array(bState)
+    max_value = np.max(mat)
+    #model v6
+    if max_value == -1:
+        training_info = np.array(TRAINING_INFO)
+        max_value_index = np.argmax(training_info, axis=1)
+        max_value_index = max_value_index.tolist()
+        bestPos = [max_value_index[0], max_value_index[1]]
+        return bestPos
+
+    for x in range(BOARD_SIZE):
+        for y in range(BOARD_SIZE):
+            if isPositionUnPlayed(bState, x, y) and bProbs[x][y] > bestProb:
+                bestProb = bProbs[x][y]
+                bestPos = [x, y]
 
     return bestPos
 
@@ -349,7 +376,8 @@ def predict3(data):
     print(res)
     return res
 
-
+#uses ship locations
+#attacks based on training info then center
 def predict(data):
     #print(bState)
     bState = data['board_state']
@@ -360,7 +388,7 @@ def predict(data):
     bState = mat.tolist()
     print(bState)
     newProbs = getProbs2(bState, ship_loc)
-    pos = getAttackPos3(bState, newProbs)
+    pos = getAttackPos4(bState, newProbs)
     x = pos[0]
     y = pos[1]
     res = {"x": y, "y": x, "prob": newProbs}
