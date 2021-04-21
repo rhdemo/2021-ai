@@ -96,6 +96,7 @@ def object_detection():
     # body = json.loads(data)
     res = []
     try:
+        print("model_v6")
         print(data)
         # bState = data['board_state']
         res = predict(data)
